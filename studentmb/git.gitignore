@@ -1,0 +1,20 @@
+# Python cache
+*.pyc
+__pycache__/
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Secrets
+.env
+
+# VS Code, PyCharm, OS trash
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
