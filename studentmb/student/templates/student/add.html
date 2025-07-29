@@ -1,32 +1,15 @@
 {% extends 'student/base.html' %}
-{% block content %}
-<h2>{{ student|default_if_none:"Add" }} Student</h2>
+{% load crispy_forms_tags %}
 
-<form method="post" class="row g-3">
-    {% csrf_token %}
-    <div class="col-md-6">
-        <label class="form-label">Student ID</label>
-        <input type="text" name="student_id" class="form-control" value="{{ student.student_id|default:'' }}">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Name</label>
-        <input type="text" name="name" class="form-control" value="{{ student.name|default:'' }}">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Course</label>
-        <input type="text" name="course" class="form-control" value="{{ student.course|default:'' }}">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Contact</label>
-        <input type="text" name="contact" class="form-control" value="{{ student.contact|default:'' }}">
-    </div>
-    <div class="col-md-12">
-        <label class="form-label">Last Result</label>
-        <input type="text" name="last_result" class="form-control" value="{{ student.last_result|default:'' }}">
-    </div>
-    <div class="col-12">
-        <button type="submit" class="btn btn-success">Submit</button>
-        <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Add Student</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
 {% endblock %}
+
+

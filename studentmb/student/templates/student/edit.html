@@ -20,6 +20,10 @@
         <label class="form-label">Contact</label>
         <input type="text" name="contact" class="form-control" value="{{ student.contact|default:'' }}">
     </div>
+    <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input type="text" name="email" class="form-control" value="{{ student.email|default:'' }}">
+    </div>
     <div class="col-md-12">
         <label class="form-label">Last Result</label>
         <input type="text" name="last_result" class="form-control" value="{{ student.last_result|default:'' }}">

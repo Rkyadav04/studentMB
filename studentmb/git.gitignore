@@ -18,3 +18,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+
+# Ignore the entire node_modules directory
+node_modules/
+
+# Ignore a specific large file
+my-large-video.mp4
