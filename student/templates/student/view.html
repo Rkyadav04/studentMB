@@ -1,0 +1,28 @@
+{% extends 'student/base.html' %}
+{% block content %}
+<h2>Student List</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Course</th>
+            <th>Contact</th>
+            <th>Last Result</th>
+            <th>View</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>{{ student.id }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.course }}</td>
+            <td>{{ student.contact }}</td>
+            <td>{{ student.last_result }}</td>
+            <td><a class="btn btn-info" href="{% url 'student_detail' student.pk %}">View</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

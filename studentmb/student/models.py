@@ -4,6 +4,21 @@ from django.utils import timezone
 created_at = models.DateTimeField(default=timezone.now)
 updated_at = models.DateTimeField(default=timezone.now)
 
+from django.contrib.auth.models import User
+
+class Profile(models.Model):
+    USER_ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('user', 'User'),
+    )
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    mobile = models.CharField(max_length=15, unique=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)  # store OTP temporarily
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.username
 
 # Create your models here.
 from django.db import models

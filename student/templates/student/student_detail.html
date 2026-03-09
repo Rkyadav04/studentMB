@@ -1,0 +1,22 @@
+{% extends 'student/base.html' %}
+{% block content %}
+<h2>Student Details</h2>
+<ul>
+    <li><strong>ID:</strong> {{ student.id }}</li>
+    <li><strong>Name:</strong> {{ student.name }}</li>
+    <li><strong>Course:</strong> {{ student.course }}</li>
+    <li><strong>Contact:</strong> {{ student.contact }}</li>
+    <li><strong>Last Result:</strong> {{ student.last_result }}</li>
+</ul>
+
+<h3>Uploaded Documents</h3>
+<ul>
+    {% for doc in documents %}
+        <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|basename }}</a> (Uploaded at: {{ doc.uploaded_at }})</li>
+    {% empty %}
+        <li>No documents uploaded.</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'student_list' %}" class="btn btn-secondary">Back to List</a>
+{% endblock %}

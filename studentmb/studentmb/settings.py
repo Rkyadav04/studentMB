@@ -8,7 +8,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
-"""
+""" 
 from django import template
 register = template.Library()
 
@@ -81,13 +81,19 @@ WSGI_APPLICATION = 'studentmb.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True' # Convert string 'True' to boolean
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'studentdb',
-        'USER': 'root',
-        'PASSWORD': 'Rkyadav@04082003',  # ✅ update this
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': '127.0.0.1',
         'PORT': '3306',
     }
@@ -116,6 +122,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
+LOGIN_URL = 'login'
 
 LANGUAGE_CODE = 'en-us'
 

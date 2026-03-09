@@ -1,0 +1,160 @@
+{% extends 'student/base.html' %}
+{% block content %}
+{% load static %}
+{% load custom_filters %}
+
+<h2 class="mb-4">All Students</h2>
+<a href="{% url 'add_student' %}" class="btn btn-primary btn mb-3" class=" zoom in">Add Student</a>
+
+<form method="GET" class="row g-2 mb-4">
+    <div class="col-md-2">
+        <input type="text" name="student_id" class="form-control" placeholder="Student ID"
+            value="{{ filters.student_id }}">
+    </div>
+    <div class="col-md-2">
+        <input type="text" name="name" class="form-control" placeholder="Name" value="{{ filters.name }}">
+    </div>
+    <div class="col-md-2">
+        <input type="text" name="course" class="form-control" placeholder="Course" value="{{ filters.course }}">
+    </div>
+    <div class="col-md-2">
+        <input type="text" name="contact" class="form-control" placeholder="Contact" value="{{ filters.contact }}">
+    </div>
+    <div class="col-md-2">
+        <select name="status" class="form-control">
+            <option value="">All Status</option>
+
+        </select>
+
+    </div>
+    <div class="col-md-2">
+        <input type="date" name="start_date" class="form-control" value="{{ filters.start_date }}">
+    </div>
+    <div class="col-md-2">
+        <input type="date" name="end_date" class="form-control" value="{{ filters.end_date }}">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'home' %}" class="btn btn-secondary w-100">Clear</a>
+    </div>
+    <div class="col-md-2">
+        <a href="{% url 'export_csv' %}?{{ request.GET.urlencode }}" class="btn btn-success w-100">Export CSV</a>
+
+
+    </div>
+</form>
+
+
+<table class="table table-bordered table-striped" id="studentTable">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Course</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Result</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th>Soft Delete</th>
+            <th>Documents</th>
+            <th class="text-center">Action</th>
+            <th class="text-nowrap px-4">Update</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in page_obj %}
+        <tr>
+
+            <td>{{ s.student_id }}</td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.course }}</td>
+            <td>{{ s.contact }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.last_result }}</td>
+            <td>{{ s.status }}</td>
+            <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ s.updated_at|date:"Y-m-d H:i" }}</td>
+            <td>
+                <a href="{% url 'soft_delete_student' s.id %}" class="btn btn-danger btn-sm">Soft Delete</a>
+            </td>
+            <td>
+                {% if s.documents.all %}
+                <ul class="list-unstyled">
+                    {% for doc in s.documents.all %}
+                    <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"documents/" }}</a> ({{
+                        doc.uploaded_at|date:"Y-m-d H:i" }})</li>
+
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <em>No documents</em>
+                {% endif %}
+            </td>
+            <td class="center">
+                <form action="{% url 'toggle_status' s.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="btn btn-sm {% if s.status == 'active' %}btn-info{% else %}btn btn-success{% endif %}">
+                        {% if s.status == 'active' %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                </form>
+            </td>
+            <td colspan="2">
+                <div class="d-flex gap-1">
+                    <a href="{% url 'edit_student' s.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'delete_student' s.id %}" class="btn btn-sm btn-danger"
+                        onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
+                    <a href="{% url 'upload_document' s.id %}" class="btn btn-sm btn-success">Upload</a>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="13" class="text-center">No students found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- ✅ Pagination Controls -->
+<nav>
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?q={{ request.GET.q }}&page=1">First</a></li>
+        <li class="page-item"><a class="page-link"
+                href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %} {% if num == page_obj.number %} <li
+            class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+
+
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link"
+                    href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">Next</a></li>
+            <li class="page-item"><a class="page-link"
+                    href="?q={{ request.GET.q }}&page={{ page_obj.paginator.num_pages }}">Last</a></li>
+            {% endif %}
+    </ul>
+</nav>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.querySelector("input[name='q']");
+        if (input) {
+            input.focus();
+        }
+    });
+</script>
+
+{% endblock %}

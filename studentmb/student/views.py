@@ -1,12 +1,16 @@
 # Create your views here.
 from django.core.paginator import Paginator
+from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
+from .forms import SignUpForm
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Student,  StudentDocument
 from django.db.models import Q
 from .forms import StudentForm
 from django.http import HttpResponse
 from django.utils.timezone import now
+from django.db.models import Count
+from datetime import datetime , timedelta, date
 
 import csv
 from django.http import HttpResponse
@@ -15,6 +19,51 @@ from django.http import HttpResponse
 
 from django.utils.timezone import now
 from datetime import datetime
+import json
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def dashboard(request):
+    # Students per course
+    course_data = Student.objects.values("course").annotate(total=Count("id"))
+    course_labels = [c["course"] for c in course_data]
+    course_counts = [c["total"] for c in course_data]
+
+    # Students per status
+    status_data = Student.objects.values("status").annotate(total=Count("id"))
+    status_labels = [s["status"] for s in status_data]
+    status_counts = [s["total"] for s in status_data]
+
+    # Students registered in last 6 months
+    month_data = (
+        Student.objects
+        .extra(select={"month": "DATE_FORMAT(created_at, '%%Y-%%m')"})
+        .values("month")
+        .annotate(total=Count("id"))
+        .order_by("month")
+    )
+    month_labels = [m["month"] for m in month_data]
+    month_counts = [m["total"] for m in month_data]
+
+    # Summary counts
+    total_students = Student.objects.count()
+    active_students = Student.objects.filter(status="active").count()
+    inactive_students = Student.objects.filter(status="inactive").count()
+
+    context = {
+        "course_labels": json.dumps(course_labels),
+        "course_counts": json.dumps(course_counts),
+        "status_labels": json.dumps(status_labels),
+        "status_counts": json.dumps(status_counts),
+        "month_labels": json.dumps(month_labels),
+        "month_counts": json.dumps(month_counts),
+        "total_students": total_students,
+        "active_students": active_students,
+        "inactive_students": inactive_students,
+    }
+    return render(request, "student/dashboard.html", context)
+
 
 def home(request):
     student_id = request.GET.get("student_id", "")
@@ -79,7 +128,7 @@ def home(request):
     })
 
 
-
+@login_required
 def add_student(request):
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES)
@@ -93,22 +142,20 @@ def add_student(request):
         form = StudentForm()
     return render(request, 'student/add.html', {'form': form})
 
-    
+@login_required
+# The industry-standard way
 def edit_student(request, id):
     student = get_object_or_404(Student, id=id)
     if request.method == 'POST':
-        student.student_id = request.POST.get('student_id' ,'')
-        student.name = request.POST.get('name' ,'')
-        student.course = request.POST.get('course' ,'')
-        student.contact = request.POST.get('contact', '')
-        student.email = request.POST.get('email', '')
-        student.last_result = request.POST.get('last_result' ,'')
-        student.status = request.POST.get('status' ,'')
-        student.save()
-        return redirect('home')
-    return render(request, 'student/edit.html', {'student': student})
-
-
+        form = StudentForm(request.POST, request.FILES, instance=student)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Details for {student.name} updated successfully!")
+            return redirect('home')
+    else:
+        form = StudentForm(instance=student)
+    return render(request, 'student/edit.html', {'form': form, 'student': student})
+@login_required
 def upload_document(request, id):
     student = get_object_or_404(Student, id=id)
 
@@ -124,13 +171,13 @@ def upload_document(request, id):
     })
 
 
-
+@login_required
 def soft_delete_student(request, pk):
     student = get_object_or_404(Student, id=pk)
     student.is_deleted = True
     student.save()
     return redirect('home')
-
+@login_required
 def delete_student(request, id):
     student = get_object_or_404(Student, id=id)
     student.delete()
@@ -182,7 +229,7 @@ def student_list(request):
         'statuses_list': Student.objects.values_list('status', flat=True).distinct()[:5],
     }
     return render(request, 'student/student_list.html', context)
-
+@login_required
 def student_detail(request, pk):
     student = get_object_or_404(Student, pk=pk)
     documents = student.documents.all()
@@ -225,7 +272,7 @@ def created_at_view(request):
         'students': students,
         'query': query
     })
-
+@login_required
 def export_csv(request):
     students = Student.objects.all()
 
@@ -270,9 +317,6 @@ def export_csv(request):
     return response
 
 
-#student login page
-from django.contrib.auth import authenticate, login, logout
-
 def login_view(request):
     if request.method == 'POST':
         user = authenticate(username=request.POST['username'], password=request.POST['password'])
@@ -287,5 +331,15 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-
+def signup_view(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) # Log the user in after they sign up
+            messages.success(request, "Account created successfully!")
+            return redirect('home') # Redirect to the dashboard or home page
+    else:
+        form = SignUpForm()
+    return render(request, 'student/signup.html', {'form': form})
 
