@@ -1,0 +1,46 @@
+{% extends 'student/base.html' %}
+{% block content %}
+
+<h2 class="mb-4">Upload Documents for {{ student.name }}</h2>
+
+<!-- Student details -->
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>ID:</strong> {{ student.student_id }}</p>
+        <p><strong>Name:</strong> {{ student.name }}</p>
+        <p><strong>Email:</strong> {{ student.email }}</p>
+        <p><strong>Course:</strong> {{ student.course }}</p>
+        <p><strong>Contact:</strong> {{ student.contact }}</p>
+        <p><strong>Status:</strong> {{ student.status }}</p>
+    </div>
+</div>
+
+<!-- Upload form -->
+<form method="POST" enctype="multipart/form-data" class="mb-4">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="file" class="form-label">Choose files:</label>
+        <input type="file" name="file" multiple class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+<!-- Success message -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<!-- Display uploaded documents -->
+<h5>Uploaded Documents:</h5>
+<ul>
+    {% for doc in documents %}
+        <li><a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"documents/" }}</a> ({{ doc.uploaded_at|date:"Y-m-d H:i" }})</li>
+    {% empty %}
+        <li>No documents uploaded.</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
+
